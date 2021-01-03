@@ -2,11 +2,12 @@ from django.db import models
 from allianceauth.eveonline.models import EveCharacter
 
 import datetime
-from django.utils import timezone
 
-# Character Stats
-class AACharacter(models.Model):
-    character = models.OneToOneField(EveCharacter, on_delete=models.CASCADE, related_name='zkill')
+
+class StatsCharacter(models.Model):
+    character = models.OneToOneField(EveCharacter,
+                                     on_delete=models.CASCADE,
+                                     related_name='zkill')
     isk_destroyed = models.BigIntegerField(default=0)
     isk_lost = models.BigIntegerField(default=0)
     all_time_sum = models.IntegerField(default=0)
@@ -22,14 +23,14 @@ class AACharacter(models.Model):
     zk_12m = models.IntegerField(default=0)
     zk_6m = models.IntegerField(default=0)
     zk_3m = models.IntegerField(default=0)
-    
+
     def __str__(self):
         return self.character.character_name
 
 
-# Monthly Character Stats
-class AAzKillMonth(models.Model):
-    char = models.ForeignKey(AACharacter, on_delete=models.CASCADE)
+class zKillMonth(models.Model):
+    char = models.ForeignKey(StatsCharacter,
+                             on_delete=models.CASCADE)
     year = models.IntegerField(default=0)
     month = models.IntegerField(default=0)
     ships_destroyed = models.IntegerField(default=0)

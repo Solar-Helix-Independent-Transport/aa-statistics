@@ -7,12 +7,12 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='allianceauth-analitics',
-    version='0.0.0.1a3',
+    name='aa-statistics',
+    version='0.1.0a',
     packages=find_packages(),
     include_package_data=True,
     license='GNU General Public License v3 (GPLv3)',
-    description='Alliance Auth Pluging',
+    description='Alliance Auth Plugin',
     long_description=README,
     url='https://github.com/pvyParts/allianceauth-analitics',
     author='ak',

@@ -1,12 +1,11 @@
 from django import template
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
-from dateutil.relativedelta import relativedelta
 from math import floor
 
 import datetime
 
-from authanalitics.models import AACharacter, AAzKillMonth
+from aastatistics.models import StatsCharacter, zKillMonth
 from allianceauth.eveonline.models import EveCharacter
 
 register = template.Library()
@@ -17,7 +16,6 @@ def get_ytd_kills_single(input_id, month=None):
     try:
         now = datetime.datetime.now()
 
-
         month_12_ago = ((now.month - 1 - 12) % 12 + 1)
         month_6_ago = ((now.month - 1 - 6) % 12 + 1)
         month_3_ago = ((now.month - 1 - 3) % 12 + 1)
@@ -25,9 +23,9 @@ def get_ytd_kills_single(input_id, month=None):
         year_6_ago = (now.year + floor((now.month - 6) / 12))
         year_3_ago = (now.year + floor((now.month - 3) / 12))
 
-        character = AACharacter.objects.filter(character__character_id=input_id)
+        character = StatsCharacter.objects.filter(character__character_id=input_id)
 
-        qs = AAzKillMonth.objects.filter(char__in=character)
+        qs = zKillMonth.objects.filter(char__in=character)
 
         qs_12m = qs.filter(year=year_12_ago, month__gte=month_12_ago) | \
                  qs.filter(year=now.year)
@@ -66,9 +64,9 @@ def get_ytd_kills_account(input_id):
         year_6_ago = (now.year + floor((now.month - 6) / 12))
         year_3_ago = (now.year + floor((now.month - 3) / 12))
 
-        character = AACharacter.objects.filter(character__character_id__in=character_ids)
+        character = StatsCharacter.objects.filter(character__character_id__in=character_ids)
 
-        qs = AAzKillMonth.objects.filter(char__in=character)
+        qs = zKillMonth.objects.filter(char__in=character)
 
         qs_12m = qs.filter(year=year_12_ago, month__gte=month_12_ago) | \
                  qs.filter(year=now.year)

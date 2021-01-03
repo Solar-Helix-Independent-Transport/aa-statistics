@@ -5,4 +5,4 @@ from . import urls
 
 @hooks.register('url_hook')
 def register_url():
-    return UrlHook(urls, 'authanalitics', r'^authanalitics/')
+    return UrlHook(urls, 'aastatistics', r'^aastatistics/')
