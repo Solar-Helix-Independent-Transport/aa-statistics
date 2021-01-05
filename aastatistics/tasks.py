@@ -5,10 +5,9 @@ import csv
 
 from celery import shared_task, chain
 
-from .models import AACharacter, AAzKillMonth
-from allianceauth.corputils.models import CorpStats, CorpMember
-from allianceauth.eveonline.models import EveCorporationInfo, EveCharacter
-from django.utils.dateparse import parse_datetime
+from .models import StatsCharacter, zKillMonth
+from allianceauth.corputils.models import CorpStats
+from allianceauth.eveonline.models import EveCharacter
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.core.exceptions import ObjectDoesNotExist
@@ -21,6 +20,7 @@ from . import app_settings
 
 logger = logging.getLogger(__name__)
 
+
 def update_character_stats(character_id):
     #logger.info('update_character_stats for %s starting' % str(character_id))
     # https://zkillboard.com/api/stats/characterID/####/
@@ -28,28 +28,12 @@ def update_character_stats(character_id):
     _stats_json = _stats_request.json()
     sleep(1)
 
-    # https://zkillboard.com/api/characterID/####/kills/
-    #_kills_request = requests.get("https://zkillboard.com/api/characterID/" + str(character_id) + "/kills/")
-    #_kills_json = _kills_request.json()
-    #sleep(1)
-
     _last_kill_date = None
-    #if len(_kills_json) > 0:
-        # https://esi.evetech.net/latest/killmails/ID####/HASH####/?datasource=tranquility
-    #    try:
-    #        _last_kill_request = requests.get(
-    #            "https://esi.evetech.net/latest/killmails/" + str(_kills_json[0]['killmail_id']) + "/" +
-    #            str(_kills_json[0]['zkb']['hash']) + "/?datasource=tranquility")
-    #        _last_kill_json = _last_kill_request.json()
-    #        sleep(1)
-    #        _last_kill_date = parse_datetime(_last_kill_json['killmail_time'])
-    #    except:
-    #        pass
 
-    char_model, created = AACharacter.objects.get_or_create(character = EveCharacter.objects.get(character_id=int(character_id)))
+    char_model, created = StatsCharacter.objects.get_or_create(character=EveCharacter.objects.get(character_id=int(character_id)))
 
     if len(_stats_json.get('months', [])) > 0:
-        current_data = AAzKillMonth.objects.filter(char=char_model)
+        current_data = zKillMonth.objects.filter(char=char_model)
         years = {}
 
         for m in current_data:
@@ -64,7 +48,7 @@ def update_character_stats(character_id):
             try:
                 zkill_month = years[month.get('year')][month.get('month')]
             except KeyError as e:
-                zkill_month = AAzKillMonth(char=char_model, year=month.get('year', 0), month=month.get('month', 0))
+                zkill_month = zKillMonth(char=char_model, year=month.get('year', 0), month=month.get('month', 0))
                 new_model = True
             zkill_month.ships_destroyed = month.get('shipsDestroyed', 0)
             zkill_month.ships_lost = month.get('shipsLost', 0)
@@ -77,9 +61,9 @@ def update_character_stats(character_id):
                 updates.append(zkill_month)
         
         if len(updates) > 0:
-            AAzKillMonth.objects.bulk_update(updates, batch_size=500, fields=['ships_destroyed','ships_lost','isk_destroyed','isk_lost','last_update'])
+            zKillMonth.objects.bulk_update(updates, batch_size=500, fields=['ships_destroyed', 'ships_lost', 'isk_destroyed', 'isk_lost', 'last_update'])
         if len(creates) > 0:
-            AAzKillMonth.objects.bulk_create(creates, batch_size=500)
+            zKillMonth.objects.bulk_create(creates, batch_size=500)
 
     char_model.isk_destroyed = _stats_json.get('iskDestroyed', 0)
     char_model.isk_lost = _stats_json.get('iskLost', 0)
@@ -113,8 +97,8 @@ def update_char(self, char_id):
             sleep(1)  # had an error printed it and skipped it YOLO. better wait a sec to not overload the api
             return 0 # fail
         try:
-            character = AACharacter.objects.get(character__character_id=char_id)
-            qs = AAzKillMonth.objects.filter(char=character)
+            character = StatsCharacter.objects.get(character__character_id=char_id)
+            qs = zKillMonth.objects.filter(char=character)
             qs_12m = qs.filter(year=dt12.year, month__gte=dt12.month) | \
                         qs.filter(year=now.year)
             qs_12m = qs_12m.aggregate(ship_destroyed_sum=Coalesce(Sum('ships_destroyed'), 0)).get('ship_destroyed_sum', 0)
@@ -140,11 +124,11 @@ def update_char(self, char_id):
     return 1  # pass
 
 
-@shared_task(name='authanaliticis.tasks.run_stat_model_update')
+@shared_task()
 def run_stat_model_update():
     # update all corpstat'd characters
     #logger.info('start')
-    member_alliances = app_settings.MEMBER_ALLIANCES # hardcoded cause *YOLO*
+    member_alliances = app_settings.MEMBER_ALLIANCES
     linked_chars = EveCharacter.objects.filter(alliance_id__in=member_alliances)  # get all authenticated characters in corp from auth internals
 
     sig_list = []
@@ -154,13 +138,14 @@ def run_stat_model_update():
             sig_list.append(update_char.si(alt.character_id))
 
     chain(sig_list).apply_async(priority=8)
-            
-@shared_task(name='authanaliticis.tasks.run_aggregate_update')
+
+
+@shared_task()
 def run_aggregate_update():
     # update all corpstat'd characters
     #logger.info('start')
     active_corp_stats = CorpStats.objects.all()
-    member_alliances = ['499005583', '1900696668'] # hardcoded cause *YOLO*
+    member_alliances = app_settings.MEMBER_ALLIANCES
     now = datetime.datetime.now()
     dt12 = now - relativedelta(months=12)
     dt6 = now - relativedelta(months=6)
@@ -172,8 +157,8 @@ def run_aggregate_update():
                 if alt.alliance_id in member_alliances:
                     try:
                         logger.info('update_character_agregates for %s starting' % str(alt.character_name))
-                        character = AACharacter.objects.get(character__character_id=alt.character_id)
-                        qs = AAzKillMonth.objects.filter(char=character)
+                        character = StatsCharacter.objects.get(character__character_id=alt.character_id)
+                        qs = zKillMonth.objects.filter(char=character)
                         qs_12m = qs.filter(year=dt12.year, month__gte=dt12.month) | \
                                  qs.filter(year=now.year)
                         qs_12m = qs_12m.aggregate(ship_destroyed_sum=Coalesce(Sum('ships_destroyed'), 0)).get('ship_destroyed_sum', 0)
@@ -195,18 +180,7 @@ def run_aggregate_update():
 
 def output_stats(file_output=True):
     active_corp_stats = CorpStats.objects.all()
-    #member_alliances = ['499005583', '1900696668'] # hardcoded cause *YOLO*
-    #for cs in active_corp_stats:
-        #members = cs.mains
-        #for member in members:
-            #update_character_stats(member.character_id)
-            #for alt in member.alts:
-                #if alt.alliance_id in member_alliances:
-                    #if alt.character_name != member.character_name:
-                        #update_character_stats(alt.character_id)
-        #missing = cs.unregistered_members
-        #for member in missing:
-        #    update_character_stats(member.character_id)
+
     out_arr={}
     for cs in active_corp_stats:
         members = cs.mains
@@ -226,9 +200,9 @@ def output_stats(file_output=True):
             year_6_ago = (now.year + floor((now.month - 6) / 12))
             year_3_ago = (now.year + floor((now.month - 3) / 12))
 
-            character = AACharacter.objects.filter(character__character_id__in=character_ids)
+            character = StatsCharacter.objects.filter(character__character_id__in=character_ids)
 
-            qs = AAzKillMonth.objects.filter(char__in=character)
+            qs = zKillMonth.objects.filter(char__in=character)
 
             qs_12m = qs.filter(year=year_12_ago, month__gte=month_12_ago) | \
                      qs.filter(year=now.year)

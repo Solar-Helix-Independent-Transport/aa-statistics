@@ -1,9 +1,8 @@
 from django.conf.urls import url
-from django.urls import path
 
 from . import views
 
-app_name = 'authanalitics'
+app_name = 'aastatistics'
 
 urlpatterns = [
     url(r'^$', views.outputcsv, name='outputcsv'),
