@@ -1,5 +1,10 @@
 from django.db import models
 from allianceauth.eveonline.models import EveCharacter
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+from allianceauth.authentication.models import User, EveCharacter, EveCorporationInfo
+
+from . import  filter as smart_filters
 
 import datetime
 
@@ -7,7 +12,7 @@ import datetime
 class StatsCharacter(models.Model):
     character = models.OneToOneField(EveCharacter,
                                      on_delete=models.CASCADE,
-                                     related_name='zkill')
+                                     related_name='character_stats')
     isk_destroyed = models.BigIntegerField(default=0)
     isk_lost = models.BigIntegerField(default=0)
     all_time_sum = models.IntegerField(default=0)
@@ -41,3 +46,32 @@ class zKillMonth(models.Model):
 
     def __str__(self):
         return self.char.character.character_name
+
+
+class FilterBase(models.Model):
+
+    name = models.CharField(max_length=500)
+    description = models.CharField(max_length=500)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return f"{self.name}: {self.description}"
+
+    def process_filter(self, user: User):
+        raise NotImplementedError("Please Create a filter!")
+
+
+class zKillStatsFilter(FilterBase):
+    class Meta:
+        verbose_name = "Smart Filter: 3Month ZKill"
+        verbose_name_plural = verbose_name
+
+    kill_count = models.IntegerField(default=0)
+    months = models.IntegerField(default=1)
+
+    def process_filter(self, user: User):
+        return smart_filters.check_kills_in_account(
+            user, self.months, self.kill_count
+        )
