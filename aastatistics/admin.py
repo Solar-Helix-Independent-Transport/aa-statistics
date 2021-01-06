@@ -12,7 +12,7 @@ class zKillMonthAdmin(admin.ModelAdmin):
 
 
 class zKillStatsFilterAdmin(admin.ModelAdmin):
-    list_display = ['kill_count', 'months']
+    list_display = ['__str__', 'kill_count', 'months']
 
 
 admin.site.register(zKillStatsFilter, zKillStatsFilterAdmin)
