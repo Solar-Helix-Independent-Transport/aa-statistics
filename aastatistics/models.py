@@ -1,10 +1,8 @@
 from django.db import models
 from allianceauth.eveonline.models import EveCharacter
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
-from allianceauth.authentication.models import User, EveCharacter, EveCorporationInfo
+from allianceauth.authentication.models import User
 
-from . import  filter as smart_filters
+from . import filters as smart_filters
 
 import datetime
 
@@ -65,7 +63,7 @@ class FilterBase(models.Model):
 
 class zKillStatsFilter(FilterBase):
     class Meta:
-        verbose_name = "Smart Filter: 3Month ZKill"
+        verbose_name = "Smart Filter: zKill: Kills in Period"
         verbose_name_plural = verbose_name
 
     kill_count = models.IntegerField(default=0)
