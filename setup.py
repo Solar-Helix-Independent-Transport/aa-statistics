@@ -1,6 +1,8 @@
 import os
 from setuptools import find_packages, setup
 
+from aastatistics import __version__
+
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
     README = readme.read()
 
@@ -8,13 +10,14 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='aa-statistics',
-    version='0.1.0a',
+    version=__version__,
     packages=find_packages(),
     include_package_data=True,
     license='GNU General Public License v3 (GPLv3)',
     description='Alliance Auth Plugin',
     long_description=README,
-    url='https://github.com/pvyParts/allianceauth-analitics',
+    long_description_content_type='text/markdown',
+    url='https://github.com/pvyParts/aa-statistics',
     author='ak',
     author_email='ak@ak.auth',
     classifiers=[
@@ -26,6 +29,5 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-    ],
+    ]
 )
-
