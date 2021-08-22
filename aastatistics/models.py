@@ -92,7 +92,7 @@ class zKillStatsFilter(FilterBase):
             kills=Sum('character__character_stats__zkillmonth__ships_destroyed',
                       filter=Q(character__character_stats__zkillmonth__date_str__gte=date_str)
                 )
-            ).values("user_id", "kills")
+            ).values("user_id", 'character_id', "kills")
         
         co = {}
         for c in _cos:

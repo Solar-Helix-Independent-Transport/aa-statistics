@@ -50,6 +50,7 @@ def update_character_stats(character_id):
             except KeyError as e:
                 zkill_month = zKillMonth(char=char_model, year=month.get('year', 0), month=month.get('month', 0))
                 new_model = True
+            zkill_month.date_str = str(month.get('year'))+str(month.get('month')).zfill(2)
             zkill_month.ships_destroyed = month.get('shipsDestroyed', 0)
             zkill_month.ships_lost = month.get('shipsLost', 0)
             zkill_month.isk_destroyed = month.get('iskDestroyed', 0)
@@ -61,7 +62,7 @@ def update_character_stats(character_id):
                 updates.append(zkill_month)
         
         if len(updates) > 0:
-            zKillMonth.objects.bulk_update(updates, batch_size=500, fields=['ships_destroyed', 'ships_lost', 'isk_destroyed', 'isk_lost', 'last_update'])
+            zKillMonth.objects.bulk_update(updates, batch_size=500, fields=['ships_destroyed', 'ships_lost', 'isk_destroyed', 'isk_lost', 'last_update', 'date_str'])
         if len(creates) > 0:
             zKillMonth.objects.bulk_create(creates, batch_size=500)
 
