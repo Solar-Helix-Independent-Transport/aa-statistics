@@ -6,10 +6,10 @@ import csv
 from celery import shared_task, chain
 
 from .models import StatsCharacter, zKillMonth
-from allianceauth.corputils.models import CorpStats
 from allianceauth.eveonline.models import EveCharacter
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
+from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
@@ -19,6 +19,13 @@ from allianceauth.services.tasks import QueueOnce
 from . import app_settings
 
 logger = logging.getLogger(__name__)
+
+if apps.is_installed("allianceauth.corputils"):
+    from allianceauth.corputils.models import CorpStats
+elif apps.is_installed("corpstats"):
+    from corpstats.models import CorpStats
+else:
+    pass
 
 
 def update_character_stats(character_id):
