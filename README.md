@@ -15,7 +15,7 @@ Currently offers
 
 ## Setup
 
-1. `pip install git+https://github.com/pvyParts/allianceauth-analitics.git`
+1. `pip install git+https://github.com/pvyParts/aa-statistics.git`
 2. add `'aastatistics',` to INSTALLED_APPS in your `local.py`
 3. migrate database and restart auth
 
