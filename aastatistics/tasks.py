@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 if apps.is_installed("allianceauth.corputils"):
     from allianceauth.corputils.models import CorpStats
 elif apps.is_installed("corpstats"):
-    from corpstats.models import CorpStats
+    from corpstats.models import CorpStat as CorpStats
 else:
     pass
 
