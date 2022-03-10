@@ -1,6 +1,7 @@
 from django.db import models
 from allianceauth.eveonline.models import EveCharacter
 from allianceauth.authentication.models import User
+from allianceauth.authentication.models import CharacterOwnership
 from django.db.models import Max, Sum, Q
 from . import filters as smart_filters
 from collections import defaultdict
@@ -87,24 +88,31 @@ class zKillStatsFilter(FilterBase):
         dt = now - relativedelta(months=self.months)
         date_str = str(dt.year)+str(dt.month).zfill(2)
 
-        co = co = users.annotate(
-            kills=Sum('character_ownerships__character__character_stats__zkillmonth__ships_destroyed',
-                      filter=Q(character_ownerships__character__character_stats__zkillmonth__date_str__gte=date_str)
+        _cos = CharacterOwnership.objects.filter(user__in=users).annotate(
+            kills=Sum('character__character_stats__zkillmonth__ships_destroyed',
+                      filter=Q(character__character_stats__zkillmonth__date_str__gte=date_str)
                 )
-            ).values("id", "kills")
-
-            
-        output = defaultdict(lambda: {"message": "", "check": False})
-        for c in co:
+            ).values("user_id", 'character_id', "kills")
+        
+        co = {}
+        for c in _cos:
+            u = c.get('user_id')
+            if u not in co:
+                co[u] = 0
             if c.get('kills'):
-                if c.get('kills') >= self.kill_count:
+                co[u] += c.get('kills')
+
+        output = defaultdict(lambda: {"message": "", "check": False})
+        for u, c in co.items():
+            if c:
+                if c >= self.kill_count:
                     check = True
                 else:
                     check = False
-                msg = str(c.get('kills')) + " Kills"
+                msg = str(c) + " Kills"
             else:
                 check = False
                 msg = "0 Kill Data"
 
-            output[c.get('id')] = {"message": msg, "check": check}
+            output[u] = {"message": msg, "check": check}
         return output

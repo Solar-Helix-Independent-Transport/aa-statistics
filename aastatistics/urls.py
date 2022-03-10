@@ -1,9 +1,8 @@
-from django.conf.urls import url
-
+from django.urls import re_path
 from . import views
 
 app_name = 'aastatistics'
 
 urlpatterns = [
-    url(r'^$', views.outputcsv, name='outputcsv'),
+    re_path(r'^$', views.outputcsv, name='outputcsv'),
 ]
