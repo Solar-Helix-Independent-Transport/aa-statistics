@@ -8,11 +8,16 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
 
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
+install_requires = [
+    'allianceauth>=2.8.0',
+]
+
 setup(
     name='aa-statistics',
     version=__version__,
     packages=find_packages(),
     include_package_data=True,
+    install_requires=install_requires,
     license='GNU General Public License v3 (GPLv3)',
     description='Alliance Auth Plugin',
     long_description=README,
