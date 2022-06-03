@@ -30,8 +30,8 @@ python manage.py collectstatic
 ## Settings for AA-Statistics
 MEMBER_ALLIANCES = [111, 222, 333] # Alliances you care about statistics for
 ## Periodic Tasks for AA-Statistics
-CELERYBEAT_SCHEDULE['aastatistics.run_stat_model_update'] = {
-    'task': 'aastatistics.run_stat_model_update',
+CELERYBEAT_SCHEDULE['aastatistics.tasks.run_stat_model_update'] = {
+    'task': 'aastatistics.tasks.run_stat_model_update',
     'schedule': crontab(minute=0, hour=0,)
 }
 ```
